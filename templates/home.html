@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  <title>Conversor ML a Dolar</title>
+</head>
+
+<body>
+  <div class="container form">
+    <div>
+      <div class="form-group">
+        <center>
+          <h1>URL de Mercado Libre:</h1>
+        </center>
+        <input type="url" class="form-control" id="url" name="url" id="exampleInputEmail1" placeholder="https://articulo.mercadolibre.com.ar/">
+      </div>
+      <center><button id="boton" type="submit" onclick="submit();" class="btn btn-primary">Calcular</button></center>
+    </div>
+  </div>
+  <br><br>
+  <h2 id="error"></h2>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12 col-sm-12 col-lg-6 col-xl-6 text-center">
+        <img id="imagen" width="400px" src="" alt="">
+      </div>
+      <div class="col-md-12 col-sm-12 col-lg-6 col-xl-6 text-center">
+        <div id="ml" class="align-center">
+          <h2 id="titulo"></h2>
+          <h4>Precio : </h4><h5 id="precio"></h5>
+          <h4 id="preciooferta1">Precio (en oferta) : </h4><h5 id="preciooferta"></h5>
+          <h4>Precio en Dolares:</h4><h5 id="precioDolar"></h5>
+          <h4>Precio Dolar:</h4> <h5 id="dolar"></h5>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+  <center>
+    <div id="anillo" class="lds-ring">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+  </center>
+
+
+
+  {% block script %}
+
+  <script>
+    document.getElementById("boton").addEventListener("submit", function (event) {
+      event.preventDefault();
+    })
+
+    function submit() {
+      document.getElementById("anillo").style.visibility = "visible"
+      document.getElementById("ml").style.visibility = "hidden"
+      document.getElementById("imagen").style.visibility = "hidden"
+      document.getElementById("error").style.visibility = "hidden";
+      var url = document.getElementById("url");
+
+      var entry = {
+        url: url.value
+      };
+
+
+      fetch(`${window.origin}/create-entry`, {
+          method: "POST",
+          credentials: "include",
+          body: JSON.stringify(entry),
+          cache: "no-cache",
+          headers: new Headers({
+            "content-type": "application/json"
+          })
+        }).then(function (response) {
+          if (response.status == 444){
+            document.getElementById("error").innerText = "Error al buscar, el link no es correcto. Ejemplo de link 'https://articulo.mercadolibre.com.ar/MLA-848490354-video-geforce-gt-730-2gb-msi-hdmi-dvi-vga-_JM#reco_item_pos=0&reco_backend=machinalis-homes-pdp&reco_backend_type=function&reco_client=home_navigation-trend-recommendations&reco_id=ab20b9a8-508e-4a68-b297-808cd5ff0f16&c_id=/home/navigation-trends-recommendations/element&c_element_order=1&c_uid=d0b9d529-5bfd-4ecd-a2b7-03d7aa6b941c'";
+            document.getElementById("error").style.visibility = "visible";
+            document.getElementById("anillo").style.visibility = "hidden";
+            return;
+          }
+          if (response.status !== 200) {
+            console.log(`Looks like there was a problem. Status code: ${response.status}`);
+            document.getElementById("error").innerText = "Error al buscar, comprueba que el link sea correcto.";
+            document.getElementById("error").style.visibility = "visible";
+            document.getElementById("anillo").style.visibility = "hidden"
+            return;
+          }
+          response.json().then(function (data) {
+            console.log(data);
+            document.getElementById("titulo").innerText = data["titulo"];
+            if (data["oferta"] != "NO"){
+              document.getElementById("preciooferta").innerText = "$"+data["precio"];
+              document.getElementById("precio").innerHTML = "<del>"+"$"+data["oferta"]+"</del>";
+              document.getElementById("preciooferta1").style.display = "block";
+            }else{
+              document.getElementById("precio").innerText ="$"+data["precio"];
+              document.getElementById("preciooferta").innerText = "";
+              document.getElementById("preciooferta1").style.display = "none";
+            }
+
+            document.getElementById("dolar").innerText = "$"+data["dolar"];
+            document.getElementById("precioDolar").innerText =data["precioDolar"]+"$";
+            document.getElementById("imagen").src =data["img"];
+            document.getElementById("ml").style.visibility = "visible";
+            document.getElementById("anillo").style.visibility = "hidden";
+            document.getElementById("imagen").style.visibility = "visible"
+          });
+        })
+        .catch(function (error) {
+          console.log("Fetch error: " + error);
+        });
+    }
+  </script>
+
+  {% endblock %}
+
+</body>
+
+</html>
