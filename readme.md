@@ -27,4 +27,5 @@ https://mercadoadolar.herokuapp.com/
 ## Generar Requirements.txt
 
 > pip3 freeze >> yourfile.txt
+> o pipreqs 
 
